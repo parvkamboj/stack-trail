@@ -1,6 +1,6 @@
 # stack-trail
 
-A terminal chatbot that talks to Claude. Type a message, get a streaming response with markdown rendering.
+A terminal chatbot that talks to Claude. Type a message, get a response.
 
 ## Setup
 
