@@ -17,6 +17,11 @@ COMMANDS:
 import os
 import sys
 from anthropic import Anthropic, APIError, APIConnectionError, APIStatusError
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -50,6 +55,15 @@ def welcome_banner() -> None:
     console.print()
 
 
+def show_help() -> None:
+    console.print("[bold]Commands:[/bold]")
+    console.print("  [bold yellow]/help[/bold yellow]     show this message")
+    console.print("  [bold yellow]/clear[/bold yellow]    reset conversation history")
+    console.print("  [bold yellow]/history[/bold yellow]  show past messages")
+    console.print("  [bold yellow]/exit[/bold yellow]     quit")
+    console.print()
+
+
 def show_history() -> None:
     if not history:
         console.print("[dim]No conversation history yet.[/dim]\n")
@@ -68,6 +82,7 @@ def show_history() -> None:
 def stream_response(user_input: str) -> None:
     history.append({"role": "user", "content": user_input})
     full_response = ""
+    usage = None
 
     try:
         with Live(
@@ -92,6 +107,7 @@ def stream_response(user_input: str) -> None:
                             padding=(0, 1),
                         )
                     )
+                usage = stream.get_final_message().usage
 
     except APIConnectionError:
         console.print("\n[bold red]Connection error.[/bold red] Check your network.\n")
@@ -108,6 +124,8 @@ def stream_response(user_input: str) -> None:
 
     if full_response:
         history.append({"role": "assistant", "content": full_response})
+        if usage:
+            console.print(f"[dim]tokens: {usage.input_tokens} in / {usage.output_tokens} out[/dim]")
     console.print()
 
 
@@ -138,6 +156,9 @@ def main() -> None:
             continue
         elif user_input.lower() == "/history":
             show_history()
+            continue
+        elif user_input.lower() == "/help":
+            show_help()
             continue
         elif user_input.startswith("/"):
             console.print("[yellow]Unknown command.[/yellow] Try /clear, /history, or /exit.\n")
